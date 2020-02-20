@@ -1,0 +1,32 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.codemonstur</groupId>
+    <artifactId>keepass-bobplugin</artifactId>
+    <version>0</version>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>11</maven.compiler.release>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.github.codemonstur</groupId>
+            <artifactId>bobthebuildtool</artifactId>
+            <version>0.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>de.slackspace</groupId>
+            <artifactId>openkeepass</artifactId>
+            <version>0.8.2</version>
+        </dependency>
+
+    </dependencies>
+
+</project>
