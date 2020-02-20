@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.codemonstur</groupId>
-    <artifactId>keepass-bobplugin</artifactId>
+    <artifactId>ranchercontrol</artifactId>
     <version>0</version>
 
     <properties>
@@ -19,12 +19,6 @@
             <artifactId>bobthebuildtool</artifactId>
             <version>0.1.0</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>de.slackspace</groupId>
-            <artifactId>openkeepass</artifactId>
-            <version>0.8.2</version>
         </dependency>
 
     </dependencies>

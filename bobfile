@@ -1,10 +1,9 @@
-name: keepass
-version: 0.2.0
+name: ranchercontrol
+version: 0.1.0
 packaging: bob-plugin
 dependencies:
   - project: ../bobthebuildtool
     scope: provided
-  - repository: de.slackspace:openkeepass:0.8.1
 
 build
     echo "[${PROJECT_NAME}] Building"
