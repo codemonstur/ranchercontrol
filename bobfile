@@ -1,5 +1,5 @@
 name: ranchercontrol
-version: 0.1.0
+version: 0.1.1
 packaging: bob-plugin
 dependencies:
   - project: ../bobthebuildtool
