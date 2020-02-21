@@ -1,4 +1,4 @@
-package ranchercontrol.pojos;
+package ranchercontrol.pojos.dtos;
 
 public final class RestartResponse {
     public final String id;

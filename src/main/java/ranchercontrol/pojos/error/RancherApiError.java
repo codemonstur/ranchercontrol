@@ -1,4 +1,4 @@
-package ranchercontrol.core;
+package ranchercontrol.pojos.error;
 
 import java.net.http.HttpResponse;
 

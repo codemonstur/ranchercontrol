@@ -1,8 +1,10 @@
 package ranchercontrol.core;
 
+import bobthebuildtool.pojos.error.InvalidInput;
 import com.google.gson.Gson;
-import ranchercontrol.pojos.ContainerInformation;
-import ranchercontrol.pojos.RestartResponse;
+import ranchercontrol.pojos.dtos.ContainerInformation;
+import ranchercontrol.pojos.error.RancherApiError;
+import ranchercontrol.pojos.dtos.RestartResponse;
 
 import java.io.IOException;
 import java.net.URI;
@@ -12,9 +14,11 @@ import java.net.http.HttpRequest.BodyPublisher;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.util.Base64;
-import java.util.Properties;
+import java.util.Map;
 
+import static bobthebuildtool.services.Log.logInfo;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static ranchercontrol.core.CliParser.getMandatoryString;
 
 public final class RancherClient {
     private static final String
@@ -30,22 +34,22 @@ public final class RancherClient {
         START_CONTAINER = "?action=activate",
         RESTART_CONTAINER = "?action=restart";
 
-    private final Properties properties;
+    private final Map<String, String> properties;
     private final HttpClient http;
     private final Gson gson;
     private final String accountId;
 
-    public RancherClient(final Properties properties, final HttpClient http, final Gson gson) {
-        this(properties, http, gson, properties.getProperty(CATTLE_ACCOUNT));
+    public RancherClient(final Map<String, String> properties, final HttpClient http, final Gson gson) throws InvalidInput {
+        this(properties, http, gson, getMandatoryString(properties, CATTLE_ACCOUNT));
     }
-    public RancherClient(final Properties properties, final HttpClient http, final Gson gson, final String accountId) {
+    public RancherClient(final Map<String, String> properties, final HttpClient http, final Gson gson, final String accountId) {
         this.properties = properties;
         this.http = http;
         this.gson = gson;
         this.accountId = accountId;
     }
 
-    public ContainerInformation getContainerInformation(final String serviceId) throws IOException {
+    public ContainerInformation getContainerInformation(final String serviceId) throws IOException, InvalidInput {
         final var request = newRancherRequest(properties, accountId, serviceId, "").GET().build();
         try {
             final var response = http.send(request, HttpResponse.BodyHandlers.ofString());
@@ -60,7 +64,7 @@ public final class RancherClient {
         return response.statusCode() >= 200 && response.statusCode() <= 299;
     }
 
-    public void runContainer(final String serviceId) throws IOException, RancherApiError {
+    public void runContainer(final String serviceId) throws IOException, RancherApiError, InvalidInput {
         final ContainerInformation info = getContainerInformation(serviceId);
         switch (info.state) {
             case "inactive": startContainer(serviceId); break;
@@ -69,7 +73,7 @@ public final class RancherClient {
         }
     }
 
-    public void startContainer(final String serviceId) throws IOException, RancherApiError {
+    public void startContainer(final String serviceId) throws IOException, RancherApiError, InvalidInput {
         final var request = newRancherRequest(properties, accountId, serviceId, START_CONTAINER)
                 .POST(BodyPublishers.noBody()).build();
         try {
@@ -81,7 +85,7 @@ public final class RancherClient {
         }
     }
 
-    public void restartContainer(final String serviceId) throws IOException, RancherApiError {
+    public void restartContainer(final String serviceId) throws IOException, RancherApiError, InvalidInput {
         final var request = newRancherRequest(properties, accountId, serviceId, RESTART_CONTAINER)
                 .POST(newRestartBody(1, 2000)).build();
         try {
@@ -90,7 +94,7 @@ public final class RancherClient {
                 throw new RancherApiError(response, "Restarting service " + serviceId + " failed");
 
             final RestartResponse restart = gson.fromJson(response.body(), RestartResponse.class);
-            System.out.println(String.format("[%s] %s - %s", restart.created, restart.name, restart.transitioningMessage));
+            logInfo(String.format("[%s] %s - %s", restart.created, restart.name, restart.transitioningMessage));
         } catch (InterruptedException e) {
             throw new IOException("Interrupted during IO", e);
         }
@@ -114,27 +118,30 @@ public final class RancherClient {
         return BodyPublishers.ofString(gson.toJson(new RestartBody(batchSize, intervalMillis)));
     }
 
-    private static String toCredentials(final Properties props) {
-        return encodeBase64(props.getProperty(CATTLE_ACCESS_KEY) + ":" + props.getProperty(CATTLE_SECRET_KEY));
+    private static String toCredentials(final Map<String, String> props) throws InvalidInput {
+        return encodeBase64(getMandatoryString(props, CATTLE_ACCESS_KEY)
+                + ":" + getMandatoryString(props, CATTLE_SECRET_KEY));
     }
 
     private static String encodeBase64(final String input) {
         return Base64.getEncoder().encodeToString(input.getBytes(UTF_8));
     }
 
-    private static HttpRequest.Builder newRancherRequest(final Properties properties, final String accountId, final String serviceId, final String action) {
+    private static HttpRequest.Builder newRancherRequest(final Map<String, String> properties
+            , final String accountId, final String serviceId, final String action) throws InvalidInput {
         return HttpRequest.newBuilder()
             .uri(URI.create(toContainerBaseUrl(properties, accountId, serviceId) + action))
             .header("Authorization", "Basic " + toCredentials(properties))
             .header("Accept", "application/json");
     }
 
-    private static String toContainerBaseUrl(final Properties props, final String accountId, final String appId) {
+    private static String toContainerBaseUrl(final Map<String, String> props, final String accountId
+            , final String appId) throws InvalidInput {
         return String.format
             ( BASE_URL
-            , props.getProperty(CATTLE_SCHEME)
-            , props.getProperty(CATTLE_HOST)
-            , props.getProperty(CATTLE_PORT)
+            , getMandatoryString(props, CATTLE_SCHEME)
+            , getMandatoryString(props, CATTLE_HOST)
+            , getMandatoryString(props, CATTLE_PORT)
             , accountId
             , appId
             );
@@ -143,4 +150,5 @@ public final class RancherClient {
     public void stopContainer(final String serviceId) {
         throw new IllegalArgumentException();
     }
+
 }
