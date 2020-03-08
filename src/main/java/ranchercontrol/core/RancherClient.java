@@ -3,8 +3,8 @@ package ranchercontrol.core;
 import bobthebuildtool.pojos.error.InvalidInput;
 import com.google.gson.Gson;
 import ranchercontrol.pojos.dtos.ContainerInformation;
-import ranchercontrol.pojos.error.RancherApiError;
 import ranchercontrol.pojos.dtos.RestartResponse;
+import ranchercontrol.pojos.error.RancherApiError;
 
 import java.io.IOException;
 import java.net.URI;
@@ -16,7 +16,6 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 import java.util.Map;
 
-import static bobthebuildtool.services.Log.logInfo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static ranchercontrol.core.CliParser.getMandatoryString;
 
@@ -92,9 +91,7 @@ public final class RancherClient {
             final var response = http.send(request, HttpResponse.BodyHandlers.ofString());
             if (!isSuccessful(response))
                 throw new RancherApiError(response, "Restarting service " + serviceId + " failed");
-
-            final RestartResponse restart = gson.fromJson(response.body(), RestartResponse.class);
-            logInfo(String.format("[%s] %s - %s", restart.created, restart.name, restart.transitioningMessage));
+            gson.fromJson(response.body(), RestartResponse.class);
         } catch (InterruptedException e) {
             throw new IOException("Interrupted during IO", e);
         }
