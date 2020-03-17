@@ -28,8 +28,8 @@ public enum BobPlugin {;
         final var action = Action.valueOf(arguments.action);
         final var http = HttpClient.newHttpClient();
         final var gson = new Gson();
-
         final var rancher = new RancherClient(environment, http, gson);
+
         switch (action) {
             case start: rancher.startContainer(arguments.serviceId); break;
             case stop: rancher.stopContainer(arguments.serviceId); break;
